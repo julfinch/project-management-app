@@ -86,6 +86,16 @@
         module.exports = { projects, clients };
     ```
 ## GRAPHQL - QUERY TO GET A SINGLE CLIENT
+1. Paste code under `RootQueryType`
+    ```shell
+        client: {
+            type: ClientType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return clients.find(client => client.id === args.id);
+            }
+        }
+    ```
 1. To be able to access `graphql` using `graphiql`, we need to set-up our schema:
     ```shell
         const { projects, clients } = require('../sampleData')
@@ -153,6 +163,7 @@
         ```
 
 ## GRAPHQL - QUERY TO GET ALL CLIENTS
+1. Paste code under `RootQueryType`
     ```shell
             clients: {
             type: new GraphQLList(ClientType),
