@@ -102,7 +102,7 @@
 
         const { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLSchema } = require('graphql');
 
-        //Client Type
+        # Client Type
         const ClientType = new GraphQLObjectType({
             name: 'Client',
             fields: () => ({
@@ -165,7 +165,7 @@
 ## GRAPHQL - QUERY TO GET ALL CLIENTS
 1. Paste code under `RootQueryType`
     ```shell
-            clients: {
+        clients: {
             type: new GraphQLList(ClientType),
             resolve(parent, args) {
                 return clients;
@@ -178,8 +178,8 @@
 
         const { GraphQLObjectType, GraphQLID, GraphQLList, GraphQLString, GraphQLSchema } = require('graphql');
 
-        //Client Type
-        // Base the fields from the sampleData.js
+        # Client Type
+        # Base the fields from the sampleData.js
         const ClientType = new GraphQLObjectType({
             name: 'Client',
             fields: () => ({
@@ -264,3 +264,290 @@
             }
             }
         ```
+
+## GRAPHQL - QUERY TO GET SINGLE PROJECT
+1. Paste code under `RootQueryType`
+    ```shell
+        # SINGLE PROJECT
+        project: {
+            type: ProjectType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return projects.find(project => project.id === args.id);
+            }
+        },
+    ```
+1. Add the code above to our `schema.js` to be able to get all the clients.
+    ```shell
+        const { projects, clients } = require('../sampleData')
+
+        const { GraphQLObjectType, GraphQLID, GraphQLList, GraphQLString, GraphQLSchema } = require('graphql');
+
+        # Project Type
+        # Base the fields from the sampleData.js
+        const ProjectType = new GraphQLObjectType({
+            name: 'Project',
+            fields: () => ({
+                id: { type: GraphQLID },
+                name: { type: GraphQLString },
+                description: { type: GraphQLString },
+                status: { type: GraphQLString },
+            })
+        });
+
+        const RootQuery = new GraphQLObjectType({
+            name: 'RootQueryType',
+            fields: {
+                # SINGLE PROJECT
+                project: {
+                    type: ProjectType,
+                    args: { id: { type: GraphQLID } },
+                    resolve(parent, args) {
+                        return projects.find(project => project.id === args.id);
+                    }
+                },
+                # ALL CLIENTS
+                clients: {
+                    type: new GraphQLList(ClientType),
+                    resolve(parent, args) {
+                        return clients;
+                    }
+                },
+                # SINGLE CLIENT
+                client: {
+                    type: ClientType,
+                    args: { id: { type: GraphQLID } },
+                    resolve(parent, args) {
+                        return clients.find(client => client.id === args.id);
+                    }
+                }
+            }
+        });
+
+        module.exports = new GraphQLSchema({
+            query: RootQuery
+        })
+    ```
+1. We can now uget all the clients.
+    - If we try to query the name, id and email of all clients:
+        ```shell
+            {
+            project (id: "1") {
+                id
+                name
+                description
+                status
+            }
+            }
+        ```
+    - The result of our query would be like this:
+        ```shell
+            {
+            "data": {
+                "project": {
+                "id": "1",
+                "name": "eCommerce Website",
+                "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu.",
+                "status": "In Progress"
+                }
+            }
+            }
+        ```
+
+## GRAPHQL - QUERY TO GET ALL PROJECTS
+1. Paste code under `RootQueryType`
+    ```shell
+        # ALL PROJECTS
+        projects: {
+            type: new GraphQLList(ProjectType),
+            resolve(parent, args) {
+                return projects;
+            }
+        },
+    ```
+1. Add the code above to our `schema.js` to be able to get all the clients.
+    ```shell
+        const { projects, clients } = require('../sampleData')
+
+        const { GraphQLObjectType, GraphQLID, GraphQLList, GraphQLString, GraphQLSchema } = require('graphql');
+
+        # Project Type
+        # Base the fields from the sampleData.js
+        const ProjectType = new GraphQLObjectType({
+            name: 'Project',
+            fields: () => ({
+                id: { type: GraphQLID },
+                name: { type: GraphQLString },
+                description: { type: GraphQLString },
+                status: { type: GraphQLString },
+            })
+        });
+
+        const RootQuery = new GraphQLObjectType({
+            name: 'RootQueryType',
+            fields: {
+                # ALL PROJECTS
+                projects: {
+                    type: new GraphQLList(ProjectType),
+                    resolve(parent, args) {
+                        return projects;
+                    }
+                },
+                # SINGLE PROJECT
+                project: {
+                    type: ProjectType,
+                    args: { id: { type: GraphQLID } },
+                    resolve(parent, args) {
+                        return projects.find(project => project.id === args.id);
+                    }
+                },
+                # ALL CLIENTS
+                clients: {
+                    type: new GraphQLList(ClientType),
+                    resolve(parent, args) {
+                        return clients;
+                    }
+                },
+                # SINGLE CLIENT
+                client: {
+                    type: ClientType,
+                    args: { id: { type: GraphQLID } },
+                    resolve(parent, args) {
+                        return clients.find(client => client.id === args.id);
+                    }
+                }
+            }
+        });
+
+        module.exports = new GraphQLSchema({
+            query: RootQuery
+        })
+    ```
+1. We can now uget all the projects.
+    - If we try to query the name, id, description and status of all projects:
+        ```shell
+            {
+            projects {
+                id
+                name
+                description
+                status
+            }
+            }
+        ```
+    - The result of our query would be like this:
+        ```shell
+            {
+            "data": {
+                "projects": [
+                {
+                    "id": "1",
+                    "name": "eCommerce Website",
+                    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu.",
+                    "status": "In Progress"
+                },
+                {
+                    "id": "2",
+                    "name": "Dating App",
+                    "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu.",
+                    "status": "In Progress"
+                },
+                ]
+            }
+            }
+        ```
+
+## GRAPHQL - QUERY TO GET A PROJECT USING ID IN RELATION TO CLIENT ID 
+1. Paste code:
+    ```shell
+        # Project Type
+        # Base the fields from the sampleData.js
+        const ProjectType = new GraphQLObjectType({
+            name: 'Project',
+            fields: () => ({
+                id: { type: GraphQLID },
+                name: { type: GraphQLString },
+                description: { type: GraphQLString },
+                status: { type: GraphQLString },
+                client: {
+                    type: ClientType,
+                    resolve(parent, args) {
+                        return clients.find(client => client.id === parent.clientId);
+                    }
+                }
+            })
+        });
+    ```
+
+1. We can now get the project with the corresponding client.
+    - If we try to query the name, id and email of all clients:
+        ```shell
+            {
+            {
+            project (id: "1") {
+                id
+                name
+                description
+                status
+                client {
+                name
+                id
+                }
+            }
+            }
+        ```
+    - The result of our query would be like this:
+        ```shell
+            {
+            "data": {
+                "project": {
+                "id": "1",
+                "name": "eCommerce Website",
+                "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu.",
+                "status": "In Progress",
+                "client": {
+                    "name": "Tony Stark",
+                    "id": "1"
+                }
+                }
+            }
+            }
+        ```
+
+## MONGODB
+1. Follow the steps from the link on how to set-up a new Database in MongoDB - [https://github.com/julfinch/finch-restaurant#backend](https://github.com/julfinch/finch-restaurant#backend)
+1. Under `Collections`, click `Add My Own Data`. Set the following info below and then click Create.
+    - Database name: project_mgmt_db
+    - Collection name: clients
+1. Open `MongoDB Compass` or download it if you haven't installed it yet.
+1. In `Mongo Atlas`, click `Overview` then `Connect`, lastly, `Compass`. 
+1. Choose `I have MongoDB installed`, copy the connection string: `mongodb+srv://julfinch:<password>@cluster0.5xsupqs.mongodb.net/`
+1. Open `Compass` and paste the connection string on the input tab, replace `<password>` with your password and at the end of the connection string, add the database name `project_mgmt_db` so it would look like this one now: `mongodb+srv://julfinch:thisismypassword@cluster0.5xsupqs.mongodb.net/project_mgmt_db`. Click `Connect`. We should now be able to see that `project_mgmt_db` is already connected.
+1. Open `Atlas` and click `Go Back`. Choose `Drivers` and copy the connection string like this one - `mongodb+srv://julfinch:<password>@cluster0.5xsupqs.mongodb.net/?retryWrites=true&w=majority` and close.
+1. Go to `.env file` and add the connectiion string with the provided password and database name - `MONGO_URI = 'mongodb+srv://julfinch:yourPasswordHere@cluster0.5xsupqs.mongodb.net/project_mgmt_db?retryWrites=true&w=majority'`.
+1. If we restart the server, we should have access to that environment variable already.
+1. Under `server folder`, create a folder called `config` and inside it is `db.js` file.
+    ```shell
+        const mongoose = require('mongoose')
+        const connectDB = async () => {
+            const conn = await mongoose.connect(process.env.MONGO_URI);
+
+            console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold)
+        }
+        module.exports = connectDB;
+    ```
+1. Under `index.js`, import `MONGODB connection` and `COLORS` and invoke it.
+    ```shell
+        const connectDB = require('./config/db');
+        const color = require('colors')
+
+        connectDB();
+    ```
+1. Restart server and we should see in the terminal: 
+    ```shell
+        Server runnnig on port 5000
+        MongoDB Connected: ac-fy51cq6-shard-00-00.5xsupqs.mongodb.net
+    ```
+
+## MODELS
+1. Under `server folder`, create a folder named `models` and inside it is `Client.js` file.
