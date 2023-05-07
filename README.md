@@ -676,6 +676,15 @@
                         id: { type: GraphQLNonNull(GraphQLID) },
                     },
                     resolve(parent, args) {
+                        # DELETE CLIENT ASSOCIATED TO A 
+                        # PROJECT WHEN WE DELETE IT
+                        Project.find({ clientId: args.id }).then(
+                            (projects) => {
+                                projects.forEach((project) => {
+                                    project.remove();
+                                })
+                            }
+                        )
                         return Client.findByIdAndRemove(args.id);
                     },
                 },
