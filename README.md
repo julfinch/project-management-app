@@ -1,7 +1,7 @@
 # PROJECT MANAGEMENT APP
 - This project was made using GraphQL.
 
-## SET UP
+# SERVER
 1. Initialize project and install dependencies
     ```shell
         mkdir project-management-app
@@ -423,7 +423,7 @@
             query: RootQuery
         })
     ```
-1. We can now uget all the projects.
+1. We can now get all the projects.
     - If we try to query the name, id, description and status of all projects:
         ```shell
             {
@@ -551,3 +551,339 @@
 
 ## MODELS
 1. Under `server folder`, create a folder named `models` and inside it is `Client.js` file.
+    ```shell
+        const mongoose = require('mongoose');
+
+        const ClientSchema = new mongoose.Schema({
+            name: {
+                type: String,
+            },
+            email: {
+                type: String,
+            },
+            phone: {
+                type: String,
+            },
+        });
+
+        module.exports = mongoose.model('Client', ClientSchema);
+    ```
+1. Under `models` folder, create `Client.js` file.
+    ```shell
+        const mongoose = require('mongoose');
+
+        const ProjectSchema = new mongoose.Schema({
+            name: {
+                type: String,
+            },
+            description: {
+                type: String,
+            },
+            status: {
+                type: String,
+                enum: ['Not Started', 'In Progress', 'Completed']
+            },
+            clientId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Client',
+            }
+        });
+
+        module.exports = mongoose.model('Project', ProjectSchema);
+    ```
+1. Open `schema.js` and import both `project` and `client` models.
+    ```shell
+        const Project = require('../models/Project');
+        const Client = require('../models/Client');
+    ```
+1. Under our `RootQuery` for each methods, change the data that we are going to return:
+    ```shell
+        return Project.find();
+        return Project.findById(args.id);
+        return Client.find();
+        return Client.findById(args.id);
+    ```
+1. Under `ProjectType`, change the data to return under client to `Client.findById(parent.clientId);` 
+
+### ADD A CLIENT
+1. At the bottom of `schema.js`, add the method for `Mutations`. Also, don't forget to add `mutation` to our `module.exports`:
+    ```shell
+        const mutation = new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {
+                addClient: {
+                    type: ClientType,
+                    args: {
+                        name: { type: GraphQLNonNull(GraphQLString) },
+                        email: { type: GraphQLNonNull(GraphQLString) },
+                        phone: { type: GraphQLNonNull(GraphQLString) },
+                    },
+                    resolve(parent, args) {
+                        const client = new Client({
+                            name: args.name,
+                            email: args.email,
+                            phone: args.phone,
+                        });
+                        // We will take evertyhing that is sent 
+                        // from the client and save it to our database
+                        return client.save()
+                    }
+                }
+            }
+        })
+
+        module.exports = new GraphQLSchema({
+            query: RootQuery,
+            mutation
+        })
+    ```
+1. Now, go to [https://gist.github.com/bradtraversy/fc527bc9a4659ab8de8e8066f3498723](https://gist.github.com/bradtraversy/fc527bc9a4659ab8de8e8066f3498723) and find the method for adding a client.
+1. Go to `GraphiQL` and write the method to add a new client:
+    ```shell
+        mutation {
+        addClient(name: "Tony Stark", email: "ironman@gmail.com", phone: "555-555-555") {
+            id
+            name
+            email
+            phone
+        }
+        }
+    ```
+1. We should get the results upong checking the right side of `GraphiQL` and also on the `Compass`.
+    ```shell
+        {
+        "data": {
+            "addClient": {
+            "id": "645660457044ae2f013a0522",
+            "name": "Tony Stark",
+            "email": "ironman@gmail.com",
+            "phone": "555-555-555"
+            }
+        }
+        }
+    ```
+### DELETE A CLIENT
+1. At the bottom of `schema.js`, add the method for `Mutations`. Also, don't forget to add `mutation` to our `module.exports`:
+    ```shell
+        const mutation = new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {
+                addClient: {
+                },
+                deleteClient: {
+                    type: ClientType,
+                    args: {
+                        id: { type: GraphQLNonNull(GraphQLID) },
+                    },
+                    resolve(parent, args) {
+                        return Client.findByIdAndRemove(args.id);
+                    },
+                },
+            }
+        })
+    ```
+1. Go to `GraphiQL` and write the method to add a new client:
+    ```shell
+        mutation {
+            deleteClient(id: "64566914392d5a8c6b10b8e9") {
+                name
+            }
+        }
+    ```
+1. We should get the results upong checking the right side of `GraphiQL` and also on the `Compass`.
+    ```shell
+        {
+        "data": {
+            "deleteClient": {
+            "name": "Lara Turner"
+            }
+        }
+        }
+    ```
+### ADD A PROJECT
+1. At the bottom of `schema.js`, add the method for `Mutations`. Also, don't forget to add `mutation` to our `module.exports`:
+    ```shell
+        const mutation = new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {
+                addClient: {
+                },
+                deleteClient: {
+                },
+                addProject: {
+                type: ProjectType,
+                args: {
+                    name: { type: GraphQLNonNull(GraphQLString) },
+                    description: { type: GraphQLNonNull(GraphQLString) },
+                    status: {
+                        type: new GraphQLEnumType({
+                            name: 'ProjectStatus',
+                            values: {
+                                'new': { value: 'Not Started' },
+                                'progree': { value: 'In Progress' },
+                                'completed': { value: 'Completed' },
+                            }
+                        }),
+                        defaultValue: 'Not Started',
+                    },
+                    clientId: {  type: GraphQLNonNull(GraphQLID) },
+                },
+                resolve(parent, args) {
+                    const project = new Project({
+                        name: args.name,
+                        description: args.description,
+                        status: args.status,
+                        clientId: args.clientId,
+                    });
+
+                    return project.save();
+                }
+            }
+            }
+        })
+    ```
+1. Go to `GraphiQL` and write the method to add a new client:
+    ```shell
+        mutation {
+        addProject(name: "Mobile App", description: "This is the description", status: new, clientId: "645660457044ae2f013a0522") {
+            name
+            id
+        }
+        }
+    ```
+1. We should get the results upong checking the right side of `GraphiQL` and also on the `Compass`.
+    ```shell
+        {
+        "data": {
+            "addProject": {
+            "name": "Mobile App",
+            "id": "64566741392d5a8c6b10b8e7"
+            }
+        }
+        }
+    ```
+### DELETE A PROJECT
+1. At the bottom of `schema.js`, add the method for `Mutations`. Also, don't forget to add `mutation` to our `module.exports`:
+    ```shell
+        const mutation = new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {
+                addClient: {
+                },
+                deleteClient: {
+                },
+                addProject: {
+                },
+                deleteProject: {
+                    type: ProjectType,
+                    args: {
+                        id: { type: GraphQLNonNull(GraphQLID) },
+                    },
+                    resolve(parent, args) {
+                        return Project.findByIdAndRemove(args.id);
+                    }
+                    }
+                }
+        })
+    ```
+1. Go to `GraphiQL` and write the method to add a new client:
+    ```shell
+        mutation {
+                deleteProject(id: "64574c409a3d27a1976b6313") {
+                    id
+                }
+        }
+    ```
+1. We should get the results upong checking the right side of `GraphiQL` and also on the `Compass`.
+    ```shell
+        {
+        "data": {
+            "deleteProject": {
+            "id": "64574c409a3d27a1976b6313"
+            }
+        }
+        }
+    ```
+### UPDATE A PROJECT
+1. At the bottom of `schema.js`, add the method for `Mutations`. Also, don't forget to add `mutation` to our `module.exports`:
+    ```shell
+        const mutation = new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {
+                addClient: {
+                },
+                deleteClient: {
+                },
+                addProject: {
+                },
+                deleteProject: {
+                },
+                updateProject: {
+                type: ProjectType,
+                args: {
+                    id: { type: GraphQLNonNull(GraphQLID) },
+                    name: { type: GraphQLString },
+                    description: { type: GraphQLString },
+                    status: {
+                        type: new GraphQLEnumType({
+                            // name ProjectStatus is already used above
+                            // must give a new name or this will throw an error
+                            name: 'ProjectStatusUpdate',
+                            values: {
+                                'new': { value: 'Not Started' },
+                                'progree': { value: 'In Progress' },
+                                'completed': { value: 'Completed' },
+                            }
+                        }),
+                    },
+                },
+                resolve(parent, args) {
+                    return Project.findByIdAndUpdate(
+                        args.id,
+                        {
+                            $set: {
+                                name: args.name,
+                                description: args.description,
+                                status: args.status,
+                            },
+                        },
+                        { new: true }
+                    );
+                }
+            }
+        })
+    ```
+1. Go to `GraphiQL` and write the method to add a new client:
+    ```shell
+        mutation {
+                updateProject(id: "64566741392d5a8c6b10b8e7", name: "Mobile Application", status: completed) {
+                    name
+                            status
+                }
+        }
+    ```
+1. We should get the results upong checking the right side of `GraphiQL` and also on the `Compass`.
+    ```shell
+        {
+        "data": {
+            "updateProject": {
+            "name": "Mobile Application",
+            "status": "Completed"
+            }
+        }
+        }
+    ```
+# CLIENT
+1. Initialize project and install dependencies
+    ```shell
+        cd project-management-app
+        npx create-react-app client
+        cd client
+        npm i @apollo/client graphql react-router-dom react-icons
+    ```
+1. During a CORS Problem, import `cors` in the `index.js` of our `server`.
+    ```shell
+        const cors = require('cors');
+
+        app.use(cors());
+    ```

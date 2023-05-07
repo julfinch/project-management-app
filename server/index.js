@@ -9,9 +9,14 @@ const connectDB = require('./config/db');
 const color = require('colors')
 // 1
 const app = express()
+// 4
+const cors = require('cors');
 
 // 3 Connect to database
 connectDB();
+// 4
+app.use(cors());
+
 // 1
 app.use('/graphql', graphqlHTTP({
     schema,
